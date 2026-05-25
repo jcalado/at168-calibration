@@ -1,0 +1,72 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: at168-calibration-backup.exe
+          - os: macos-latest
+            artifact: at168-calibration-backup
+          - os: ubuntu-latest
+            artifact: at168-calibration-backup
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build with PyInstaller
+        run: pyinstaller build.spec
+
+      - name: Make binary executable (Unix)
+        if: runner.os != 'Windows'
+        run: chmod +x dist/${{ matrix.artifact }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }}
+          path: dist/${{ matrix.artifact }}
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Rename platform binaries
+        run: |
+          mv artifacts/Windows/at168-calibration-backup.exe artifacts/at168-calibration-backup-windows.exe
+          mv artifacts/macOS/at168-calibration-backup artifacts/at168-calibration-backup-macos
+          mv artifacts/Linux/at168-calibration-backup artifacts/at168-calibration-backup-linux
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            artifacts/at168-calibration-backup-windows.exe
+            artifacts/at168-calibration-backup-macos
+            artifacts/at168-calibration-backup-linux
