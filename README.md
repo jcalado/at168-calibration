@@ -1,5 +1,8 @@
 # AT-D168UV Calibration GUI
 
+<img width="711" height="720" alt="image" src="https://github.com/user-attachments/assets/f66a6427-96de-4450-9577-419112f2bad3" />
+
+
 This is a fork of [DualTachyon/at168-calibration](https://github.com/DualTachyon/at168-calibration) that adds a graphical user interface for backing up calibration data.
 
 Please follow DualTachyon's recommendations and documentation for calibration procedures and device handling.
